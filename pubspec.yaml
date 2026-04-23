@@ -1,0 +1,43 @@
+name: flutter_dorm_app
+description: "A new Flutter project."
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.6.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  google_fonts: ^8.0.2 # ใช้ฟอนต์ Google Fonts
+  font_awesome_flutter: ^10.12.0 # ใช้ไอคอนจาก Font Awesome
+  url_launcher: ^6.3.2 # ใช้เปิดเว็บ เปิดแอปโทรศัพท์
+  latlong2: ^0.9.1 # ใช้จัดการพิกัดลพติจูดและละติจูด
+  supabase_flutter: ^2.12.0 # ใช้เชื่อมต่อกับฐานข้อมูล Supabase
+  intl: ^0.20.2 # ใช้จัด format วันที่ เวลา ตัวเลขจำนวนเต็ม 
+  image_picker: ^1.2.1 # เปิดกล้องแกลอรี่
+  provider: ^6.1.2 # ใช้สำหรับจัดการสถานะของแอป
+  cached_network_image: ^3.3.1 # ใช้สำหรับแคชรูปภาพจากอินเทอร์เน็ต
+  flutter_dotenv: ^6.0.1
+ 
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  icons_launcher: ^3.0.3 # ใช้สร้างไอคอนแอปสำหรับ Android และ iOS
+
+icons_launcher:
+  image_path: "assets/icons/icon.png"
+  platforms:
+    android:
+      enable: true
+    ios:
+      enable: true
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/image/ # โฟลเดอร์สำหรับเก็บรูปภาพ
+    - assets/icon/ # โฟลเดอร์สำหรับเก็บไอคอน
+    - .env
