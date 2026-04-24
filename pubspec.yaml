@@ -41,5 +41,6 @@ flutter:
   uses-material-design: true
   assets:
     - assets/image/ # โฟลเดอร์สำหรับเก็บรูปภาพ
-    - assets/icon/ # โฟลเดอร์สำหรับเก็บไอคอน
+    - assets/icons/ # โฟลเดอร์สำหรับเก็บไอคอน
     - .env
+    - assets/icons/icon.png

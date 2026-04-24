@@ -37,7 +37,7 @@ class _FlutterDormAppState extends State<FlutterDormApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const MainLayout(),
+      home: const SplashView(),
       theme: AppTheme.lightTheme,
     );
   }
