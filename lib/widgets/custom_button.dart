@@ -19,25 +19,17 @@ class CustomButton extends StatelessWidget {
       height: 55,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor:
-              const Color(0xFFC48B71), // สีหลักโทนส้มอิฐอ่อน/น้ำตาลอบอุ่น
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-          elevation: 0, // ไม่ใส่เงาเพื่อคงความแบนราบ (Flat/Minimal)
-        ),
+        // 💡 ลบ style: ElevatedButton.styleFrom(...) ออกทั้งหมด
+        // เพื่อให้ปุ่มดึงสีส้ม DM โลโก้ และเงาโค้งมนจาก AppTheme มาใช้อัตโนมัติ
         child: isLoading
-            ? const CircularProgressIndicator(color: Colors.white)
-            : Text(
-                text,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  letterSpacing: 0.5,
-                ),
-              ),
+            ? const SizedBox(
+                height: 24,
+                width: 24,
+                child: CircularProgressIndicator(
+                    color: Colors.white, strokeWidth: 3),
+              )
+            : Text(text),
+        // 💡 ลบ TextStyle ออกด้วย เพื่อให้ดึงฟอนต์ Kanit จาก Theme มาใช้
       ),
     );
   }

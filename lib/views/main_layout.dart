@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import '../services/auth_service.dart';
 import 'login_view.dart';
-// เดี๋ยวเราจะ import หน้า Dashboard, Room, Tenant, Bill ของจริงมาใส่ทีหลัง
+import 'dashboard_view.dart';
+import 'room_view.dart';
+import 'tenant_view.dart';
+import 'bill_view.dart';
+// เดี๋ยวเราจะทำการ import ไฟล์หน้าจอของจริง (Dashboard, Room, ฯลฯ) มาใส่ในขั้นต่อไป
 
 class MainLayout extends StatefulWidget {
   const MainLayout({super.key});
@@ -14,19 +18,18 @@ class _MainLayoutState extends State<MainLayout> {
   int _selectedIndex = 0;
   final AuthService _authService = AuthService();
 
-  // รายชื่อหน้าจอทั้ง 4 หน้า (ตอนนี้สร้างเป็นข้อความจำลองไว้ตรงกลางจอก่อน)
+  // สร้าง List ของหน้าจอทั้ง 4 หน้า (ตอนนี้ใส่ข้อความจำลองไว้ตรงกลางจอก่อน)
   final List<Widget> _pages = [
-    const Center(
-        child:
-            Text('หน้า: ภาพรวม (Dashboard)', style: TextStyle(fontSize: 20))),
-    const Center(
-        child: Text('หน้า: จัดการห้องพัก', style: TextStyle(fontSize: 20))),
-    const Center(child: Text('หน้า: ผู้เช่า', style: TextStyle(fontSize: 20))),
-    const Center(
-        child: Text('หน้า: ค่าใช้จ่าย (บิล)', style: TextStyle(fontSize: 20))),
+    const DashboardView(),
+    const RoomView(),
+    const TenantView(),
+    const BillView(),
+    const Center(child: Text('หน้า: จัดการห้องพัก')),
+    const Center(child: Text('หน้า: ผู้เช่า')),
+    const Center(child: Text('หน้า: ค่าใช้จ่าย (บิล)')),
   ];
 
-  // ฟังก์ชันเปลี่ยนหน้าเมื่อกดเมนูด้านล่าง
+  // ฟังก์ชันสลับหน้าจอเมื่อกดเมนูด้านล่าง
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
@@ -47,22 +50,12 @@ class _MainLayoutState extends State<MainLayout> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFBF7), // พื้นหลังขาวนวล
-
-      // แถบด้านบน (App Bar)
+      // แถบด้านบน (App Bar) จะดึงสไตล์ความคลีนมาจาก app_theme.dart อัตโนมัติ
       appBar: AppBar(
-        backgroundColor: Colors.white,
-        elevation: 0, // เอาเงาออกให้แบนราบ
-        title: const Text(
-          'DormManager',
-          style: TextStyle(
-            color: Color(0xFF333333),
-            fontWeight: FontWeight.bold,
-          ),
-        ),
+        title: const Text('Dorm Manager'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.logout, color: Color(0xFFC48B71)),
+            icon: const Icon(Icons.logout_rounded),
             onPressed: _handleLogout,
             tooltip: 'ออกจากระบบ',
           ),
@@ -72,36 +65,52 @@ class _MainLayoutState extends State<MainLayout> {
       // พื้นที่แสดงผลหลักตรงกลางจอ (เปลี่ยนไปตามเมนูที่กด)
       body: _pages[_selectedIndex],
 
-      // แถบเมนูด้านล่าง
-      bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, // บังคับให้แสดงข้อความครบทุกปุ่ม
-        backgroundColor: Colors.white,
-        selectedItemColor: const Color(0xFFC48B71), // สีส้มอิฐตอนถูกเลือก
-        unselectedItemColor: Colors.grey.shade400, // สีเทาตอนไม่ได้เลือก
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        items: const [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.dashboard_outlined),
-            activeIcon: Icon(Icons.dashboard_rounded), // ไอคอนทึบตอนถูกเลือก
-            label: 'ภาพรวม',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.door_front_door_outlined),
-            activeIcon: Icon(Icons.door_front_door),
-            label: 'ห้องพัก',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.people_outline),
-            activeIcon: Icon(Icons.people),
-            label: 'ผู้เช่า',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.receipt_long_outlined),
-            activeIcon: Icon(Icons.receipt_long),
-            label: 'ค่าใช้จ่าย',
-          ),
-        ],
+      // แถบเมนูด้านล่าง (Bottom Navigation Bar) สไตล์ Soft UI
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              spreadRadius: 0,
+              blurRadius: 20,
+              offset: const Offset(0, -5), // เงาฟุ้งขึ้นด้านบนเล็กน้อย
+            ),
+          ],
+        ),
+        child: BottomNavigationBar(
+          elevation: 0, // ปิดเงาเดิมของ Flutter ทิ้งไปใช้เงาของ Container แทน
+          type: BottomNavigationBarType
+              .fixed, // บังคับให้แสดงข้อความและไอคอนครบทุกปุ่ม
+          backgroundColor: Colors.white,
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          // สีของไอคอนที่ถูกเลือกจะถูกดึงมาจาก Theme หลัก (สีส้ม) อัตโนมัติ
+          unselectedItemColor: Colors.grey.shade400,
+          selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.dashboard_outlined),
+              activeIcon: Icon(Icons.dashboard_rounded),
+              label: 'ภาพรวม',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.door_front_door_outlined),
+              activeIcon: Icon(Icons.door_front_door_rounded),
+              label: 'ห้องพัก',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.people_outline_rounded),
+              activeIcon: Icon(Icons.people_rounded),
+              label: 'ผู้เช่า',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.receipt_long_outlined),
+              activeIcon: Icon(Icons.receipt_long_rounded),
+              label: 'ค่าใช้จ่าย',
+            ),
+          ],
+        ),
       ),
     );
   }

@@ -1,42 +1,43 @@
 class BillModel {
-  final String? id;
-  final String? roomId;
-  final String? tenantId;
+  final String id;
+  final String roomId;
+  final String tenantId;
   final int month;
   final int year;
   final double roomPrice;
-
-  // น้ำ
   final double waterMeterPrev;
-  final double waterMeterCurr;
+  final double waterMeterCur;
   final double waterUnit;
   final double waterCost;
-
-  // ไฟ
   final double electricMeterPrev;
-  final double electricMeterCurr;
+  final double electricMeterCur;
   final double electricUnit;
   final double electricCost;
-
   final double totalAmount;
   final String status;
   final String? slipUrl;
   final DateTime? paidAt;
   final DateTime? createdAt;
+  final String? remark;
+  final String? paymentMethod;
+
+  // 💡 ตัวแปรพิเศษสำหรับดึงมาโชว์บนหน้าจอ
+  final String? roomNumber;
+  final String? tenantName;
 
   BillModel({
-    this.id,
-    this.roomId,
-    this.tenantId,
+    required this.id,
+    required this.roomId,
+    required this.tenantId,
     required this.month,
     required this.year,
     required this.roomPrice,
     required this.waterMeterPrev,
-    required this.waterMeterCurr,
+    required this.waterMeterCur,
     required this.waterUnit,
     required this.waterCost,
     required this.electricMeterPrev,
-    required this.electricMeterCurr,
+    required this.electricMeterCur,
     required this.electricUnit,
     required this.electricCost,
     required this.totalAmount,
@@ -44,6 +45,10 @@ class BillModel {
     this.slipUrl,
     this.paidAt,
     this.createdAt,
+    this.remark,
+    this.paymentMethod,
+    this.roomNumber,
+    this.tenantName,
   });
 
   factory BillModel.fromJson(Map<String, dynamic> json) {
@@ -51,47 +56,55 @@ class BillModel {
       id: json['id'],
       roomId: json['room_id'],
       tenantId: json['tenant_id'],
-      month: json['month'] ?? 1,
-      year: json['year'] ?? DateTime.now().year,
-      roomPrice: (json['room_price'] ?? 0).toDouble(),
-      waterMeterPrev: (json['water_meter_prev'] ?? 0).toDouble(),
-      waterMeterCurr: (json['water_meter_curr'] ?? 0).toDouble(),
-      waterUnit: (json['water_unit'] ?? 0).toDouble(),
-      waterCost: (json['water_cost'] ?? 0).toDouble(),
-      electricMeterPrev: (json['electric_meter_prev'] ?? 0).toDouble(),
-      electricMeterCurr: (json['electric_meter_curr'] ?? 0).toDouble(),
-      electricUnit: (json['electric_unit'] ?? 0).toDouble(),
-      electricCost: (json['electric_cost'] ?? 0).toDouble(),
-      totalAmount: (json['total_amount'] ?? 0).toDouble(),
-      status: json['status'] ?? 'unpaid',
+      month: json['month'],
+      year: json['year'],
+      roomPrice: (json['room_price'] as num).toDouble(),
+      waterMeterPrev: (json['water_meter_prev'] as num).toDouble(),
+      waterMeterCur: (json['water_meter_cur'] as num).toDouble(),
+      waterUnit: (json['water_unit'] as num).toDouble(),
+      waterCost: (json['water_cost'] as num).toDouble(),
+      electricMeterPrev: (json['electric_meter_prev'] as num).toDouble(),
+      electricMeterCur: (json['electric_meter_cur'] as num).toDouble(),
+      electricUnit: (json['electric_unit'] as num).toDouble(),
+      electricCost: (json['electric_cost'] as num).toDouble(),
+      totalAmount: (json['total_amount'] as num).toDouble(),
+      status: json['status'],
       slipUrl: json['slip_url'],
       paidAt: json['paid_at'] != null ? DateTime.parse(json['paid_at']) : null,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'])
           : null,
+      remark: json['remark'],
+      paymentMethod: json['payment_method'],
+      // 💡 ดึงข้อมูลจากการ Join ตาราง
+      roomNumber:
+          json['rooms_tb'] != null ? json['rooms_tb']['room_number'] : null,
+      tenantName:
+          json['tenants_tb'] != null ? json['tenants_tb']['name'] : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      if (id != null) 'id': id,
       'room_id': roomId,
       'tenant_id': tenantId,
       'month': month,
       'year': year,
       'room_price': roomPrice,
       'water_meter_prev': waterMeterPrev,
-      'water_meter_curr': waterMeterCurr,
+      'water_meter_cur': waterMeterCur,
       'water_unit': waterUnit,
       'water_cost': waterCost,
       'electric_meter_prev': electricMeterPrev,
-      'electric_meter_curr': electricMeterCurr,
+      'electric_meter_cur': electricMeterCur,
       'electric_unit': electricUnit,
       'electric_cost': electricCost,
       'total_amount': totalAmount,
       'status': status,
       'slip_url': slipUrl,
-      if (paidAt != null) 'paid_at': paidAt!.toIso8601String(),
+      'paid_at': paidAt?.toIso8601String(),
+      'remark': remark,
+      'payment_method': paymentMethod,
     };
   }
 }

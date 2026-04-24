@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dorm_app/views/splash_view.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart'; // 1. Import flutter_dotenv
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:flutter_dorm_app/themes/app_theme.dart'; // 1. เพิ่มการ Import ไฟล์ธีม
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -36,11 +36,7 @@ class _FlutterDormAppState extends State<FlutterDormApp> {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const SplashView(),
-      theme: ThemeData(
-        textTheme: GoogleFonts.promptTextTheme(
-          Theme.of(context).textTheme,
-        ),
-      ),
+      theme: AppTheme.lightTheme,
     );
   }
 }

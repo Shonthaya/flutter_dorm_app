@@ -1,5 +1,3 @@
-// ignore_for_file: prefer_final_fields
-
 import 'package:flutter/material.dart';
 import '../widgets/custom_textfield.dart';
 import '../widgets/custom_button.dart';
@@ -17,11 +15,9 @@ class _LoginViewState extends State<LoginView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isLoading = false;
-  // สร้างตัวแปรเรียกใช้ Service
   final AuthService _authService = AuthService();
 
   void _handleLogin() async {
-    // 1. ตรวจสอบว่ากรอกข้อมูลครบไหม
     if (_emailController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('กรุณากรอกอีเมลและรหัสผ่าน')),
@@ -29,16 +25,14 @@ class _LoginViewState extends State<LoginView> {
       return;
     }
 
-    setState(() => _isLoading = true); // เริ่มโหลด
+    setState(() => _isLoading = true);
 
     try {
-      // 2. เรียกใช้ Service เพื่อตรวจสอบกับ Supabase
       await _authService.signIn(
         email: _emailController.text.trim(),
         password: _passwordController.text.trim(),
       );
 
-      // 3. ถ้าสำเร็จ ให้เปลี่ยนหน้าไป MainLayout
       if (mounted) {
         Navigator.pushReplacement(
           context,
@@ -46,20 +40,18 @@ class _LoginViewState extends State<LoginView> {
         );
       }
     } catch (e) {
-      // 4. ถ้าผิดพลาด (เช่น รหัสผิด) ให้แจ้งเตือนผู้ใช้
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString())),
+          SnackBar(content: Text('เข้าสู่ระบบไม่สำเร็จ: ${e.toString()}')),
         );
       }
     } finally {
-      if (mounted) setState(() => _isLoading = false); // หยุดโหลด
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
   @override
   void dispose() {
-    // คืนค่าหน่วยความจำเมื่อปิดหน้าจอ
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -68,71 +60,99 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFDFBF7), // สีพื้นหลังขาวนวล ตามธีม
+      // scaffoldBackgroundColor จะเป็นสีเทาอ่อน F6F8FA จากธีมโดยอัตโนมัติ
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 32.0),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // ส่วนของโลโก้ (ชั่วคราวใช้ Icon หากมีภาพสามารถเปลี่ยนเป็น Image.asset ได้)
-                const Icon(
-                  Icons.domain_rounded,
-                  size: 80,
-                  color: Color(0xFFC48B71), // สีหลักโทนอบอุ่น
+                // 1. LOGO แบบ Soft UI
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        spreadRadius: 1,
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(60),
+                    child: Image.asset(
+                      'assets/image/LOGODM.png', // มั่นใจว่าชื่อไฟล์ตรงกันนะครับ
+                      fit: BoxFit.cover,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 24),
 
-                // ชื่อแอป
+                // 2. ชื่อแอปและคำต้อนรับ
                 const Text(
-                  'DormManager',
-                  textAlign: TextAlign.center,
+                  'Dorm Manager',
                   style: TextStyle(
-                    fontSize: 32,
+                    fontSize: 28,
                     fontWeight: FontWeight.bold,
-                    color: Color(0xFF333333), // สีเทาเข้ม
-                    letterSpacing: 1.2,
+                    color: Color(0xFF2C3338),
                   ),
                 ),
-                const SizedBox(height: 8),
-
-                // ข้อความต้อนรับ
                 const Text(
                   'ยินดีต้อนรับสู่การทำงาน',
-                  textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Colors.black54,
+                    color: Colors.black45,
                   ),
                 ),
-                const SizedBox(height: 48),
+                const SizedBox(height: 40),
 
-                // ช่องกรอกอีเมล
-                CustomTextField(
-                  hintText: 'อีเมล',
-                  prefixIcon: Icons.email_outlined,
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
+                // 3. ส่วนของฟอร์มล็อกอิน (Card แบบนวลๆ)
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.03),
+                        spreadRadius: 5,
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      CustomTextField(
+                        hintText: 'อีเมลแอดมิน',
+                        prefixIcon: Icons.email_outlined,
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                      ),
+                      const SizedBox(height: 16),
+                      CustomTextField(
+                        hintText: 'รหัสผ่าน',
+                        prefixIcon: Icons.lock_outline_rounded,
+                        controller: _passwordController,
+                        isPassword: true,
+                      ),
+                      const SizedBox(height: 24),
+                      CustomButton(
+                        text: 'เข้าสู่ระบบ',
+                        isLoading: _isLoading,
+                        onPressed: _handleLogin,
+                      ),
+                    ],
+                  ),
                 ),
-                const SizedBox(height: 16),
 
-                // ช่องกรอกรหัสผ่าน
-                CustomTextField(
-                  hintText: 'รหัสผ่าน',
-                  prefixIcon: Icons.lock_outline,
-                  controller: _passwordController,
-                  isPassword: true,
-                ),
                 const SizedBox(height: 32),
-
-                // ปุ่มล็อกอิน
-                CustomButton(
-                  text: 'เข้าสู่ระบบ',
-                  isLoading: _isLoading,
-                  onPressed: _handleLogin,
-                ),
               ],
             ),
           ),
