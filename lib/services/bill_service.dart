@@ -83,4 +83,33 @@ class BillService {
       return false;
     }
   }
+
+  // 6. อัปเดตสถานะบิลเป็น "ชำระแล้ว" (paid) พร้อมบันทึกเวลา
+  Future<void> updateBillStatusToPaid(String billId) async {
+    try {
+      await _supabase.from('bills_tb').update({
+        'status': 'paid',
+        'paid_at': DateTime.now().toIso8601String(), // บันทึกเวลาที่กดรับเงิน
+      }).eq('id', billId);
+    } catch (e) {
+      throw Exception('เกิดข้อผิดพลาดในการอัปเดตสถานะบิล: $e');
+    }
+  }
+
+  // 7. ดึงประวัติบิลเฉพาะที่ "ชำระเงินแล้ว" เรียงตามวันที่จ่ายล่าสุด
+  Future<List<BillModel>> getPaidBillsHistory() async {
+    try {
+      final response = await _supabase
+          .from('bills_tb')
+          .select('*, rooms_tb(room_number), tenants_tb(name)')
+          .eq('status', 'paid') // คัดมาเฉพาะที่จ่ายแล้ว
+          .order('paid_at', ascending: false); // เรียงจากเวลาที่กดรับเงินล่าสุด
+
+      return (response as List)
+          .map((bill) => BillModel.fromJson(bill))
+          .toList();
+    } catch (e) {
+      throw Exception('เกิดข้อผิดพลาดในการดึงประวัติบิล: $e');
+    }
+  }
 }

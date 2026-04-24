@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../models/bill_model.dart';
 import '../services/bill_service.dart';
+import 'bill_detail_view.dart'; // 💡 เพิ่ม Import หน้ารายละเอียดบิลตรงนี้
 
 class BillView extends StatefulWidget {
   const BillView({super.key});
@@ -210,7 +211,6 @@ class _BillViewState extends State<BillView> {
                   height: 55,
                   child: ElevatedButton(
                     onPressed: () async {
-                      // 1. ตรวจสอบการกรอกข้อมูล
                       if (waterCurCtrl.text.isEmpty ||
                           elecCurCtrl.text.isEmpty) {
                         ScaffoldMessenger.of(context).showSnackBar(
@@ -223,7 +223,6 @@ class _BillViewState extends State<BillView> {
                       final int currentMonth = DateTime.now().month;
                       final int currentYear = DateTime.now().year;
 
-                      // 2. 💡 ตรวจสอบบิลซ้ำ (ใช้ระบบที่เราเพิ่มใน Service)
                       bool isDuplicate =
                           await _billService.isBillAlreadyCreated(
                               selectedTenant!['room_id'],
@@ -232,18 +231,46 @@ class _BillViewState extends State<BillView> {
 
                       if (isDuplicate) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              backgroundColor: Colors.redAccent,
-                              content: Text(
-                                  'ห้อง ${selectedTenant!['rooms_tb']['room_number']} ได้ออกบิลเดือน $currentMonth/$currentYear ไปแล้ว!'),
-                            ),
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext dialogContext) {
+                              return AlertDialog(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                title: const Row(
+                                  children: [
+                                    Icon(Icons.warning_amber_rounded,
+                                        color: Colors.redAccent, size: 28),
+                                    SizedBox(width: 8),
+                                    Text('แจ้งเตือนบิลซ้ำ',
+                                        style: TextStyle(
+                                            color: Colors.redAccent,
+                                            fontWeight: FontWeight.bold)),
+                                  ],
+                                ),
+                                content: Text(
+                                  'ห้อง ${selectedTenant!['rooms_tb']['room_number']} ได้ออกบิลเดือน $currentMonth/$currentYear ไปแล้ว!\n\nกรุณาตรวจสอบอีกครั้ง',
+                                  style: const TextStyle(fontSize: 16),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () =>
+                                        Navigator.pop(dialogContext),
+                                    child: const Text('เข้าใจแล้ว',
+                                        style: TextStyle(
+                                            color: Color(0xFFF28C38),
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold)),
+                                  ),
+                                ],
+                              );
+                            },
                           );
                         }
                         return;
                       }
 
-                      // 3. ถ้าไม่ซ้ำ ดำเนินการบันทึก
                       final newBill = BillModel(
                         id: '',
                         roomId: selectedTenant!['room_id'],
@@ -368,67 +395,79 @@ class _BillViewState extends State<BillView> {
                     final bill = _bills[index];
                     final isPaid = bill.status == 'paid';
 
-                    return Container(
-                      margin: const EdgeInsets.only(bottom: 16),
-                      padding: const EdgeInsets.all(20),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(20),
-                        boxShadow: [
-                          BoxShadow(
-                              color: Colors.black.withOpacity(0.03),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5))
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                  'ห้อง ${bill.roomNumber} (${bill.tenantName})',
-                                  style: const TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFF2C3338))),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 12, vertical: 6),
-                                decoration: BoxDecoration(
-                                    color: isPaid
-                                        ? Colors.green.withOpacity(0.1)
-                                        : Colors.redAccent.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(30)),
-                                child: Text(isPaid ? 'ชำระแล้ว' : 'ค้างชำระ',
-                                    style: TextStyle(
-                                        fontSize: 12,
-                                        color: isPaid
-                                            ? Colors.green.shade700
-                                            : Colors.redAccent.shade700,
-                                        fontWeight: FontWeight.bold)),
-                              ),
-                            ],
+                    // 💡 เปลี่ยนจาก Container ธรรมดามาใช้ InkWell เพื่อให้กดได้
+                    return InkWell(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => BillDetailView(bill: bill),
                           ),
-                          const SizedBox(height: 12),
-                          const Divider(
-                              color: Color(0xFFF6F8FA), thickness: 1.5),
-                          const SizedBox(height: 12),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text('บิลประจำเดือน ${bill.month}/${bill.year}',
-                                  style:
-                                      const TextStyle(color: Colors.black54)),
-                              Text('฿${bill.totalAmount.toStringAsFixed(2)}',
-                                  style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Color(0xFFF28C38))),
-                            ],
-                          ),
-                        ],
+                        );
+                      },
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        margin: const EdgeInsets.only(bottom: 16),
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                                color: Colors.black.withOpacity(0.03),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5))
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                    'ห้อง ${bill.roomNumber} (${bill.tenantName})',
+                                    style: const TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFF2C3338))),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 12, vertical: 6),
+                                  decoration: BoxDecoration(
+                                      color: isPaid
+                                          ? Colors.green.withOpacity(0.1)
+                                          : Colors.redAccent.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(30)),
+                                  child: Text(isPaid ? 'ชำระแล้ว' : 'ค้างชำระ',
+                                      style: TextStyle(
+                                          fontSize: 12,
+                                          color: isPaid
+                                              ? Colors.green.shade700
+                                              : Colors.redAccent.shade700,
+                                          fontWeight: FontWeight.bold)),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            const Divider(
+                                color: Color(0xFFF6F8FA), thickness: 1.5),
+                            const SizedBox(height: 12),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('บิลประจำเดือน ${bill.month}/${bill.year}',
+                                    style:
+                                        const TextStyle(color: Colors.black54)),
+                                Text('฿${bill.totalAmount.toStringAsFixed(2)}',
+                                    style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Color(0xFFF28C38))),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     );
                   },

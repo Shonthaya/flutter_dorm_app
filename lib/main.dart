@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_dorm_app/views/dashboard_view.dart';
+import 'package:flutter_dorm_app/views/main_layout.dart';
 import 'package:flutter_dorm_app/views/splash_view.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
@@ -35,7 +37,7 @@ class _FlutterDormAppState extends State<FlutterDormApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: const SplashView(),
+      home: const MainLayout(),
       theme: AppTheme.lightTheme,
     );
   }

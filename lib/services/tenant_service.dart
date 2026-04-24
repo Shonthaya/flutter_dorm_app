@@ -50,4 +50,25 @@ class TenantService {
       throw Exception('เกิดข้อผิดพลาดในการบันทึกข้อมูล: $e');
     }
   }
+
+  // 4. แจ้งย้ายออก (Check-out)
+  Future<void> checkOutTenant(String tenantId, String roomId) async {
+    try {
+      // หาวันที่ปัจจุบัน (YYYY-MM-DD) เพื่อบันทึกเป็นวันย้ายออก
+      final moveOutDate = DateTime.now().toIso8601String().split('T')[0];
+
+      // Step 1: ปิดสถานะผู้เช่าคนนี้ และใส่วันที่ย้ายออก
+      await _supabase.from('tenants_tb').update({
+        'status': 'inactive',
+        'move_out_date': moveOutDate,
+      }).eq('id', tenantId);
+
+      // Step 2: เปลี่ยนสถานะห้องนั้นให้กลับมา 'ว่าง' อีกครั้ง
+      await _supabase
+          .from('rooms_tb')
+          .update({'status': 'available'}).eq('id', roomId);
+    } catch (e) {
+      throw Exception('เกิดข้อผิดพลาดในการแจ้งย้ายออก: $e');
+    }
+  }
 }

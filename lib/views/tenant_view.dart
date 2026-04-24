@@ -35,8 +35,66 @@ class _TenantViewState extends State<TenantView> {
     }
   }
 
+  // 💡 ฟังก์ชันใหม่: แสดงกล่องยืนยันการย้ายออก
+  void _showCheckOutConfirmDialog(TenantModel tenant) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.logout_rounded, color: Colors.redAccent, size: 28),
+            SizedBox(width: 8),
+            Text('แจ้งย้ายออก', style: TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Text(
+          'คุณต้องการแจ้งย้ายออกให้คุณ ${tenant.name}\n(ห้อง ${tenant.roomNumber}) ใช่หรือไม่?\n\nระบบจะบันทึกประวัติการย้ายออก และเปลี่ยนสถานะห้องให้กลับมา "ว่าง" พร้อมรับผู้เช่าใหม่ทันที',
+          style: const TextStyle(fontSize: 16),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('ยกเลิก',
+                style: TextStyle(
+                    color: Colors.black54, fontWeight: FontWeight.bold)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor:
+                  Colors.redAccent, // ปุ่มสีแดงให้รู้ว่าเป็น Action สำคัญ
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () async {
+              Navigator.pop(context); // ปิดกล่องยืนยัน
+              setState(() => _isLoading = true); // โชว์โหลดหมุนๆ รอ
+              try {
+                // เรียกใช้ Service ที่เราเพิ่งสร้าง
+                await _tenantService.checkOutTenant(tenant.id, tenant.roomId);
+                _fetchTenants(); // โหลดข้อมูลใหม่
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                      content: Text('บันทึกการย้ายออกเรียบร้อยแล้ว')));
+                }
+              } catch (e) {
+                setState(() => _isLoading = false);
+                if (mounted) {
+                  ScaffoldMessenger.of(context)
+                      .showSnackBar(SnackBar(content: Text(e.toString())));
+                }
+              }
+            },
+            child: const Text('ยืนยันย้ายออก',
+                style: TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddTenantDialog() async {
-    // 1. โหลดห้องว่างมารอไว้ก่อน
     List<RoomModel> availableRooms = [];
     try {
       availableRooms = await _tenantService.getAvailableRooms();
@@ -64,9 +122,7 @@ class _TenantViewState extends State<TenantView> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => StatefulBuilder(
-          // ใช้ StatefulBuilder เพื่อให้ Dropdown ทำงานใน BottomSheet ได้
-          builder: (context, setModalState) {
+      builder: (context) => StatefulBuilder(builder: (context, setModalState) {
         return Container(
           padding: EdgeInsets.only(
             bottom: MediaQuery.of(context).viewInsets.bottom,
@@ -93,9 +149,8 @@ class _TenantViewState extends State<TenantView> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF6F8FA),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                      color: const Color(0xFFF6F8FA),
+                      borderRadius: BorderRadius.circular(16)),
                   child: DropdownButtonHideUnderline(
                     child: DropdownButton<String>(
                       isExpanded: true,
@@ -107,9 +162,8 @@ class _TenantViewState extends State<TenantView> {
                               'ห้อง ${room.roomNumber} (฿${room.price.toStringAsFixed(0)})'),
                         );
                       }).toList(),
-                      onChanged: (value) {
-                        setModalState(() => selectedRoomId = value);
-                      },
+                      onChanged: (value) =>
+                          setModalState(() => selectedRoomId = value),
                     ),
                   ),
                 ),
@@ -136,7 +190,7 @@ class _TenantViewState extends State<TenantView> {
                         name: nameController.text,
                         phone: phoneController.text,
                         roomId: selectedRoomId!,
-                        moveInDate: DateTime.now(), // ใช้วันนี้เป็นวันเข้าพัก
+                        moveInDate: DateTime.now(),
                         status: 'active',
                       );
 
@@ -144,7 +198,7 @@ class _TenantViewState extends State<TenantView> {
                         await _tenantService.addTenant(newTenant);
                         if (mounted) {
                           Navigator.pop(context);
-                          _fetchTenants(); // โหลดรายชื่อผู้เช่าใหม่
+                          _fetchTenants();
                         }
                       } catch (e) {
                         if (mounted)
@@ -262,51 +316,76 @@ class _TenantViewState extends State<TenantView> {
                   offset: const Offset(0, 5)),
             ],
           ),
-          child: Row(
+          child: Column(
             children: [
-              CircleAvatar(
-                backgroundColor: const Color(0xFFF28C38).withOpacity(0.1),
-                radius: 24,
-                child:
-                    const Icon(Icons.person_rounded, color: Color(0xFFF28C38)),
+              Row(
+                children: [
+                  CircleAvatar(
+                    backgroundColor: const Color(0xFFF28C38).withOpacity(0.1),
+                    radius: 24,
+                    child: const Icon(Icons.person_rounded,
+                        color: Color(0xFFF28C38)),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(tenant.name,
+                            style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2C3338))),
+                        const SizedBox(height: 4),
+                        Text(
+                            'ห้อง ${tenant.roomNumber ?? '-'} | โทร: ${tenant.phone ?? '-'}',
+                            style: const TextStyle(
+                                fontSize: 14, color: Colors.black54)),
+                      ],
+                    ),
+                  ),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: isActive
+                          ? Colors.green.withOpacity(0.1)
+                          : Colors.grey.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      isActive ? 'กำลังพักอาศัย' : 'ย้ายออกแล้ว',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: isActive
+                            ? Colors.green.shade700
+                            : Colors.grey.shade600,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(tenant.name,
-                        style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFF2C3338))),
-                    const SizedBox(height: 4),
-                    Text(
-                        'ห้อง ${tenant.roomNumber ?? '-'} | โทร: ${tenant.phone ?? '-'}',
-                        style: const TextStyle(
-                            fontSize: 14, color: Colors.black54)),
-                  ],
+
+              // 💡 เพิ่มปุ่ม "แจ้งย้ายออก" เข้ามาใต้ข้อมูล (โชว์เฉพาะคนที่ยังพักอยู่)
+              if (isActive) ...[
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: Divider(color: Color(0xFFF6F8FA), thickness: 1.5),
                 ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: isActive
-                      ? Colors.green.withOpacity(0.1)
-                      : Colors.grey.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(30),
-                ),
-                child: Text(
-                  isActive ? 'กำลังพักอาศัย' : 'ย้ายออกแล้ว',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color:
-                        isActive ? Colors.green.shade700 : Colors.grey.shade600,
-                    fontWeight: FontWeight.bold,
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton.icon(
+                    onPressed: () => _showCheckOutConfirmDialog(tenant),
+                    icon: const Icon(Icons.logout_rounded,
+                        color: Colors.redAccent, size: 18),
+                    label: const Text('แจ้งย้ายออก',
+                        style: TextStyle(
+                            color: Colors.redAccent,
+                            fontWeight: FontWeight.bold)),
                   ),
                 ),
-              ),
+              ],
             ],
           ),
         );
