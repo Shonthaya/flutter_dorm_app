@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'login_view.dart'; // Import หน้า Login เพื่อเตรียมเปลี่ยนหน้า
+import '../services/auth_service.dart'; // 💡 นำเข้า AuthService เพื่อใช้เช็คสถานะการล็อกอิน
+import 'login_view.dart';
+import 'main_layout.dart'; // 💡 นำเข้า MainLayout เพื่อเตรียมกระโดดไปหน้าหลัก
 
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
@@ -9,25 +11,38 @@ class SplashView extends StatefulWidget {
 }
 
 class _SplashViewState extends State<SplashView> {
+  final AuthService _authService = AuthService(); // เรียกใช้งาน AuthService
+
   @override
   void initState() {
     super.initState();
-    _navigateToLogin();
+    _checkLoginStatus(); // เปลี่ยนชื่อฟังก์ชันให้สื่อความหมายมากขึ้น
   }
 
-  // ฟังก์ชันหน่วงเวลา 2.5 วินาที แล้วเปลี่ยนไปหน้า Login อัตโนมัติ
-  Future<void> _navigateToLogin() async {
-    // ในอนาคตเราจะเอาหน้านี้ไว้เช็คว่าเคยล็อกอินค้างไว้หรือเปล่า
+  // ฟังก์ชันหน่วงเวลา 2.5 วินาที พร้อมเช็คสถานะการล็อกอินอัตโนมัติ (Auto-Login)
+  Future<void> _checkLoginStatus() async {
+    // หน่วงเวลาให้โชว์โลโก้ 2.5 วินาที
     await Future.delayed(const Duration(milliseconds: 2500));
 
     // ตรวจสอบว่าหน้าจอยังเปิดอยู่หรือไม่ก่อนทำการเปลี่ยนหน้า
     if (!mounted) return;
 
-    // ใช้ pushReplacement เพื่อไม่ให้กดย้อนกลับมาหน้า Splash Screen ได้อีก
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => const LoginView()),
-    );
+    // 💡 เช็คว่ามีแอดมินล็อกอินค้างไว้หรือไม่
+    final currentUser = _authService.getCurrentUser();
+
+    if (currentUser != null) {
+      // ถ้าเคยล็อกอินไว้แล้ว ให้ข้ามไปหน้า MainLayout (ที่มี Dashboard) เลย
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const MainLayout()),
+      );
+    } else {
+      // ถ้าไม่มีค้างไว้ หรือเพิ่ง Logout ไป ให้เข้าหน้า Login ตามปกติ
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => const LoginView()),
+      );
+    }
   }
 
   @override
